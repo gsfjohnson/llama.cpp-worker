@@ -17,7 +17,7 @@ from fastapi import FastAPI, Response
 app = FastAPI()
 
 LLAMA_SERVER_HOST = os.getenv("LLAMA_SERVER_HOST", "127.0.0.1")
-LLAMA_SERVER_PORT = os.getenv("LLAMA_SERVER_PORT", "8080")
+LLAMA_SERVER_PORT = os.getenv("LLAMA_ARG_PORT", "8080")
 LLAMA_HEALTH_URL = f"http://{LLAMA_SERVER_HOST}:{LLAMA_SERVER_PORT}/health"
 
 

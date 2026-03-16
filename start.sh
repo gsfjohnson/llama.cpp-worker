@@ -50,16 +50,17 @@ else
     echo "******** WARNING: Caching is disabled. Please visit the inference-worker README and docs to learn more."
 fi
 
-# check if $LLAMA_SERVER_CMD_ARGS is set
-if [ -z "$LLAMA_SERVER_CMD_ARGS" ]; then
-    echo "******** Warning: LLAMA_SERVER_CMD_ARGS is not set. Defaulting to -hf unsloth/gemma-3-270m-it-GGUF:IQ2_XXS --ctx-size 512 -ngl 999"
-    LLAMA_SERVER_CMD_ARGS="-hf unsloth/gemma-3-270m-it-GGUF:IQ2_XXS --ctx-size 512 -ngl 999"
+if [ ! -z "$LLAMA_SERVER_ONLY_HEALTH" ]; then
+    echo "******** Exec: python3 -u /health_proxy.py"
+    exec python3 -u /health_proxy.py
 fi
 
-# check if the substring --port is in LLAMA_SERVER_CMD_ARGS and if yes, raise an error:
-if [[ "$LLAMA_SERVER_CMD_ARGS" == *"--port"* ]]; then
-    echo "******** Error: You must not define --port in LLAMA_SERVER_CMD_ARGS, as port 3098 is required."
-    exit 1
+# check if $LLAMA_SERVER_CMD_ARGS is set
+if [ -z "$LLAMA_SERVER_CMD_ARGS" ]; then
+    #echo "******** Fatal: LLAMA_SERVER_CMD_ARGS is not set. Use something like: -hf unsloth/gemma-3-270m-it-GGUF:IQ2_XXS --ctx-size 512 -ngl 999"
+    #exit 1
+    echo "******** Warning: LLAMA_SERVER_CMD_ARGS is not set. Defaulting to '--ctx-size 512 -ngl 999'"
+    LLAMA_SERVER_CMD_ARGS="--ctx-size 512 -ngl 999"
 fi
 
 # trap exit signals and call the cleanup function
@@ -76,18 +77,17 @@ echo "******** Stopping existing llama-server instances (if any)..."
 # we have a string with all the command line arguments in the env var LLAMA_SERVER_CMD_ARGS;
 # it contains a.e. "-hf modelname --ctx-size 4096 -ngl 999".
 
-echo "******** Running /app/llama-server $CACHED_LLAMA_ARGS $LLAMA_SERVER_CMD_ARGS --port 3098"
-
 touch llama.server.log
 
 # --- Start the health-check proxy in the background ---
+export HEALTH_PORT="${HEALTH_PORT:-3000}"
 echo "[startup] Starting health-check proxy on port ${HEALTH_PORT}..."
-export LLAMA_SERVER_PORT="${MAIN_PORT}"
 python3 -u /health_proxy.py &
 HEALTH_PID=$!
 
 # We need to pass these arguments to llama-server verbatim.
 cd /app
-exec ./llama-server $CACHED_LLAMA_ARGS $LLAMA_SERVER_CMD_ARGS --port 3098 2>&1 | tee llama.server.log &
+echo "******** Running /app/llama-server $CACHED_LLAMA_ARGS $LLAMA_SERVER_CMD_ARGS"
+exec ./llama-server $CACHED_LLAMA_ARGS $LLAMA_SERVER_CMD_ARGS 2>&1 | tee llama.server.log &
 # LLAMA_SERVER_PID=$! # store the process ID (PID) of the background command
 
