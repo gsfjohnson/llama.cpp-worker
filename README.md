@@ -1,3 +1,6 @@
+Forked: Jacob-ML/inference-worker
+Detached fork: March 15th 2026.
+
 <p align="center">
     <img src="https://raw.githubusercontent.com/ggml-org/llama.cpp/master/media/llama1-icon-transparent.png" alt="llama.cpp logo" width="128">
 </p>
