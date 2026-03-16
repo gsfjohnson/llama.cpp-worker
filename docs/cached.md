@@ -22,24 +22,24 @@ The `inference-worker` for llama.cpp now supports this caching mechanism.
 
 ## How to use the new caching mechanism
 
-It ships the `src/find_cached.py` script which can be used to reference any Hugging Face model of your choice and get its cached path on the local worker storage.
+It ships the `src/find_cached.sh` script which can be used to reference any Hugging Face model of your choice and get its cached path on the local worker storage.
 
 Here is how the script can be used independently (which you will likely never need to do):
 
 ```bash
-python3 src/find_cached.py HF_MODEL_ID GGUF_PATH_IN_REPO
+bash src/find_cached.sh HF_MODEL_ID GGUF_PATH_IN_REPO
 ```
 
 Example:
 
 ```bash
-python3 src/find_cached.py unsloth/gemma-3-270m-it-GGUF gemma-3-270m-it-Q8_0.gguf
+bash src/find_cached.sh unsloth/gemma-3-270m-it-GGUF gemma-3-270m-it-Q8_0.gguf
 ```
 
 Or, if your model is in a folder (an edge case nobody seems to be thinking about, driving me absolutely crazy):
 
 ```bash
-python3 src/find_cached.py jacob-ml/jacob-24b models/jacob-24b-q4_k_m.gguf
+bash src/find_cached.sh jacob-ml/jacob-24b models/jacob-24b-q4_k_m.gguf
 ```
 
 We will now integrate this into our workflow. Hang tight.
