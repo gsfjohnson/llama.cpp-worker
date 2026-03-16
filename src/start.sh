@@ -9,7 +9,7 @@ set -e -o pipefail
 # script after the server is up and running.
 
 cleanup() {
-    echo "[start] Cleaning up..."
+    echo "******** Cleaning up..."
     pkill -P $$ # kill all child processes of the current script
     exit 0
 }
@@ -20,6 +20,8 @@ find_cached_path() {
     local cache_dir="/runpod-volume/huggingface-cache/hub"
     local model="$LLAMA_CACHED_MODEL"
     local gguf_in_repo="${LLAMA_CACHED_GGUF_PATH:-model.gguf}"
+
+    ls $cache_dir | head -n 50
 
     local cache_name
     cache_name=$(echo "${model}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
@@ -34,29 +36,29 @@ find_cached_path() {
         fi
     fi
 
-    echo "[start] Warning: Could not find cached model path for ${model}"
+    echo "******** Warning: Could not find cached model path for ${model}"
     CACHED_LLAMA_ARGS=""
 }
 
 # check if $LLAMA_CACHED_MODEL is set and not empty
 if [ -n "$LLAMA_CACHED_MODEL" ]; then
-    echo "[start] Caching is enabled. Finding cached model path..."
+    echo "******** Caching is enabled. Finding cached model path..."
     find_cached_path
 
-    echo "[start] Using cached model with arguments: $CACHED_LLAMA_ARGS"
+    echo "******** Using cached model with arguments: $CACHED_LLAMA_ARGS"
 else
-    echo "[start] WARNING: Caching is disabled. Please visit the inference-worker README and docs to learn more."
+    echo "******** WARNING: Caching is disabled. Please visit the inference-worker README and docs to learn more."
 fi
 
 # check if $LLAMA_SERVER_CMD_ARGS is set
 if [ -z "$LLAMA_SERVER_CMD_ARGS" ]; then
-    echo "[start] Warning: LLAMA_SERVER_CMD_ARGS is not set. Defaulting to -hf unsloth/gemma-3-270m-it-GGUF:IQ2_XXS --ctx-size 512 -ngl 999"
+    echo "******** Warning: LLAMA_SERVER_CMD_ARGS is not set. Defaulting to -hf unsloth/gemma-3-270m-it-GGUF:IQ2_XXS --ctx-size 512 -ngl 999"
     LLAMA_SERVER_CMD_ARGS="-hf unsloth/gemma-3-270m-it-GGUF:IQ2_XXS --ctx-size 512 -ngl 999"
 fi
 
 # check if the substring --port is in LLAMA_SERVER_CMD_ARGS and if yes, raise an error:
 if [[ "$LLAMA_SERVER_CMD_ARGS" == *"--port"* ]]; then
-    echo "[start] Error: You must not define --port in LLAMA_SERVER_CMD_ARGS, as port 3098 is required."
+    echo "******** Error: You must not define --port in LLAMA_SERVER_CMD_ARGS, as port 3098 is required."
     exit 1
 fi
 
@@ -64,17 +66,17 @@ fi
 trap cleanup SIGINT SIGTERM
 
 # kill any existing llama-server processes
-echo "[start] Stopping existing llama-server instances (if any)..."
+echo "******** Stopping existing llama-server instances (if any)..."
 {
     pkill llama-server 2>/dev/null
 } || {
-    echo "[start] No llama-server running"
+    echo "******** No llama-server running"
 }
 
 # we have a string with all the command line arguments in the env var LLAMA_SERVER_CMD_ARGS;
 # it contains a.e. "-hf modelname --ctx-size 4096 -ngl 999".
 
-echo "[start] Running /app/llama-server $CACHED_LLAMA_ARGS $LLAMA_SERVER_CMD_ARGS --port 3098"
+echo "******** Running /app/llama-server $CACHED_LLAMA_ARGS $LLAMA_SERVER_CMD_ARGS --port 3098"
 
 touch llama.server.log
 
@@ -86,7 +88,7 @@ LLAMA_SERVER_PID=$! # store the process ID (PID) of the background command
 tries_so_far=0
 
 check_server_is_running() {
-    echo "[start] Checking if llama-server is done initializing..."
+    echo "******** Checking if llama-server is done initializing..."
 
     if cat llama.server.log | grep -q "listening"; then
         return 0 # success
@@ -97,18 +99,18 @@ check_server_is_running() {
     tries_so_far=$((tries_so_far + 1))
 
     if [ $tries_so_far -ge 120 ]; then
-        echo "[start] Error: llama-server did not start within 60 seconds."
+        echo "******** Error: llama-server did not start within 60 seconds."
         exit 1
     fi
 
     # check if the process is still running
     if ! kill -0 $LLAMA_SERVER_PID 2>/dev/null; then
-        echo "[start] Error: llama-server process has exited unexpectedly."
+        echo "******** Error: llama-server process has exited unexpectedly."
         exit 1
     fi
 }
 
-echo "[start] Waiting for llama-server to start..."
+echo "******** Waiting for llama-server to start..."
 
 # wait for the server to start
 while ! check_server_is_running; do
@@ -116,7 +118,7 @@ while ! check_server_is_running; do
     sleep 0.5
 done
 
-#echo "[start] llama-server is up and running, delegating to the handler script."
-echo "[start] llama-server is up and running"
+#echo "******** llama-server is up and running, delegating to the handler script."
+echo "******** llama-server is up and running"
 
 #python -u handler.py $1
