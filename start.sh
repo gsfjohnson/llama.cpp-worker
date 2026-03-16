@@ -3,9 +3,11 @@
 # fail on error:
 set -e -o pipefail
 
-# Print all LLAMA_* environment variables
-echo "******** LLAMA_* environment variables:"
+echo "================================================"
+echo "  RunPod llama.cpp Worker (type: load balancer)"
+echo "================================================"
 env | grep '^LLAMA_' | sort || true
+echo "================================================"
 
 # - Starts llama-server with cached model file, if found.
 # - health_proxy.py, for serverless health /ping.
@@ -48,7 +50,7 @@ fi
 
 if [ ! -z "$LLAMA_SERVER_ONLY_HEALTH" ]; then
     echo "******** Exec: python3 -u /health_proxy.py"
-    exec python3 -u /health_proxy.py
+    exec python -u /app/health_proxy.py
 fi
 
 # trap exit signals and call the cleanup function
@@ -67,7 +69,7 @@ touch llama.server.log
 # --- Start the health-check proxy in the background ---
 export HEALTH_PORT="${HEALTH_PORT:-3000}"
 echo "******** Starting health-check proxy on port ${HEALTH_PORT}..."
-python3 -u /app/health_proxy.py &
+python -u /app/health_proxy.py &
 HEALTH_PID=$!
 
 # We need to pass these arguments to llama-server verbatim.
