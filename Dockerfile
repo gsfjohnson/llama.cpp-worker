@@ -24,7 +24,7 @@ WORKDIR /
 
 # Add ./src as /work
 # ADD ./src /work
-COPY --chmod +x src/start.sh /
+COPY --chmod=755 src/start.sh /
 
 # Install runpod and its dependencies
 # RUN pip install -r ./requirements.txt && chmod +x /work/start.sh
