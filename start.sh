@@ -64,7 +64,7 @@ if [ -z "$LLAMA_SERVER_CMD_ARGS" ]; then
 fi
 
 # trap exit signals and call the cleanup function
-trap cleanup SIGINT SIGTERM
+#trap cleanup SIGINT SIGTERM
 
 # kill any existing llama-server processes
 echo "******** Stopping existing llama-server instances (if any)..."
@@ -81,12 +81,18 @@ touch llama.server.log
 
 # --- Start the health-check proxy in the background ---
 export HEALTH_PORT="${HEALTH_PORT:-3000}"
-echo "[startup] Starting health-check proxy on port ${HEALTH_PORT}..."
-python3 -u /health_proxy.py &
+echo "******** Starting health-check proxy on port ${HEALTH_PORT}..."
+python3 -u /app/health_proxy.py &
 HEALTH_PID=$!
 
 # We need to pass these arguments to llama-server verbatim.
-echo "******** Running /app/llama-server $CACHED_LLAMA_ARGS $LLAMA_SERVER_CMD_ARGS"
-exec /app/llama-server $CACHED_LLAMA_ARGS $LLAMA_SERVER_CMD_ARGS 2>&1 | tee llama.server.log &
+cd /app
+echo "******** /app/llama-server $CACHED_LLAMA_ARGS $LLAMA_SERVER_CMD_ARGS"
+if [ "$LLAMA_EXEC" -ne 0 ]; then
+  echo "******** exec"
+  exec /app/llama-server $CACHED_LLAMA_ARGS $LLAMA_SERVER_CMD_ARGS 2>&1 | tee llama.server.log
+else
+  echo "******** not exec"
+  /app/llama-server $CACHED_LLAMA_ARGS $LLAMA_SERVER_CMD_ARGS 2>&1 | tee llama.server.log
+fi
 # LLAMA_SERVER_PID=$! # store the process ID (PID) of the background command
-

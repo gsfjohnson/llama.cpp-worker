@@ -1,6 +1,6 @@
 runpod
 python-dotenv
 openai
-httpx==0.28.*
+httpx
 uvicorn==0.34.*
 fastapi==0.115.*

@@ -24,4 +24,4 @@ RUN apt-get update --yes --quiet \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the entrypoint
-ENTRYPOINT ["/bin/sh", "-c", "/app/start.sh"]
+ENTRYPOINT ["/bin/bash", "-c", "/app/start.sh"]
