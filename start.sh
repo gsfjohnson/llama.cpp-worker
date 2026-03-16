@@ -19,13 +19,13 @@ find_cached_path() {
     local model="$LLAMA_CACHED_MODEL"
     local gguf_in_repo="${LLAMA_CACHED_GGUF_PATH:-model.gguf}"
 
-    ls /runpod-volume | head -n 50
-    ls /runpod-volume/huggingface-cache | head -n 50
+    #ls /runpod-volume | head -n 50
+    #ls /runpod-volume/huggingface-cache | head -n 50
     ls $cache_dir | head -n 50
 
     local cache_name
     cache_name=$(echo "${model}" | sed 's|/|--|g' | tr '[:upper:]' '[:lower:]')
-    echo "cache name: $cache_name"
+    #echo "cache name: $cache_name"
 
     local snapshots_dir="${cache_dir}/models--${cache_name}/snapshots"
     ls $snapshots_dir | head -n 50
@@ -34,6 +34,8 @@ find_cached_path() {
         local snapshot
         snapshot=$(ls "${snapshots_dir}" | head -n 1)
         if [ -n "${snapshot}" ]; then
+            echo "--- ls $snapshots_dir/$snapshot | head -n 50 ---"
+            ls $snapshots_dir/$snapshot | head -n 50
             CACHED_LLAMA_ARGS="-m ${snapshots_dir}/${snapshot}/${gguf_in_repo}"
             return
         fi
