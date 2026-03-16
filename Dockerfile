@@ -16,7 +16,7 @@ RUN apt-get update --yes --quiet \
        python3.11-gdbm python3.11-tk bash curl \
     && ln -s /usr/bin/python3.11 /usr/bin/python \
     && curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11 \
-    && pip install -r requirements.txt
+    && pip install -r requirements.txt \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
