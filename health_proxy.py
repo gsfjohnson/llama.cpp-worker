@@ -21,8 +21,8 @@ LLAMA_BASE_URL = f"http://{LLAMA_SERVER_HOST}:{LLAMA_SERVER_PORT}"
 LLAMA_HEALTH_URL = f"{LLAMA_BASE_URL}/health"
 
 HOP_BY_HOP_HEADERS = frozenset({
-    "connection", "keep-alive", "proxy-authenticate", "proxy-authorization",
-    "te", "trailers", "transfer-encoding", "upgrade",
+    "host", "connection", "keep-alive", "proxy-authenticate",
+    "proxy-authorization", "te", "trailers", "transfer-encoding", "upgrade",
 })
 
 
@@ -85,7 +85,7 @@ async def proxy(request: Request, path: str):
     url = f"{LLAMA_BASE_URL}/{path}"
     headers = {
         k: v for k, v in request.headers.items()
-        if k.lower() not in ("host",) | HOP_BY_HOP_HEADERS
+        if k.lower() not in HOP_BY_HOP_HEADERS
     }
     body = await request.body()
 
