@@ -3,16 +3,12 @@
 # fail on error:
 set -e -o pipefail
 
-# This script starts the llama-server with the command line arguments
-# specified in the environment variable LLAMA_SERVER_CMD_ARGS, ensuring
-# that the server listens on port 3098. It also starts the handler.py
-# script after the server is up and running.
+# Print all LLAMA_* environment variables
+echo "******** LLAMA_* environment variables:"
+env | grep '^LLAMA_' | sort || true
 
-cleanup() {
-    echo "******** Cleaning up..."
-    pkill -P $$ # kill all child processes of the current script
-    exit 0
-}
+# - Starts llama-server with cached model file, if found.
+# - health_proxy.py, for serverless health /ping.
 
 CACHED_LLAMA_ARGS=""
 
@@ -55,14 +51,6 @@ if [ ! -z "$LLAMA_SERVER_ONLY_HEALTH" ]; then
     exec python3 -u /health_proxy.py
 fi
 
-# check if $LLAMA_SERVER_CMD_ARGS is set
-if [ -z "$LLAMA_SERVER_CMD_ARGS" ]; then
-    #echo "******** Fatal: LLAMA_SERVER_CMD_ARGS is not set. Use something like: -hf unsloth/gemma-3-270m-it-GGUF:IQ2_XXS --ctx-size 512 -ngl 999"
-    #exit 1
-    echo "******** Warning: LLAMA_SERVER_CMD_ARGS is not set. Defaulting to '--ctx-size 512 -ngl 999'"
-    LLAMA_SERVER_CMD_ARGS="--ctx-size 512 -ngl 999"
-fi
-
 # trap exit signals and call the cleanup function
 #trap cleanup SIGINT SIGTERM
 
@@ -74,9 +62,6 @@ echo "******** Stopping existing llama-server instances (if any)..."
     echo "******** No llama-server running"
 }
 
-# we have a string with all the command line arguments in the env var LLAMA_SERVER_CMD_ARGS;
-# it contains a.e. "-hf modelname --ctx-size 4096 -ngl 999".
-
 touch llama.server.log
 
 # --- Start the health-check proxy in the background ---
@@ -87,12 +72,12 @@ HEALTH_PID=$!
 
 # We need to pass these arguments to llama-server verbatim.
 cd /app
-echo "******** /app/llama-server $CACHED_LLAMA_ARGS $LLAMA_SERVER_CMD_ARGS"
-if [ "$LLAMA_EXEC" -ne 0 ]; then
+echo "******** /app/llama-server $CACHED_LLAMA_ARGS"
+if [ "$LLAMA_EXEC" != "0" ]; then
   echo "******** exec"
-  exec /app/llama-server $CACHED_LLAMA_ARGS $LLAMA_SERVER_CMD_ARGS 2>&1 | tee llama.server.log
+  exec /app/llama-server $CACHED_LLAMA_ARGS 2>&1 | tee llama.server.log
 else
   echo "******** not exec"
-  /app/llama-server $CACHED_LLAMA_ARGS $LLAMA_SERVER_CMD_ARGS 2>&1 | tee llama.server.log
+  /app/llama-server $CACHED_LLAMA_ARGS 2>&1 | tee llama.server.log
 fi
 # LLAMA_SERVER_PID=$! # store the process ID (PID) of the background command
