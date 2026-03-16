@@ -19,6 +19,8 @@ find_cached_path() {
     local model="$LLAMA_CACHED_MODEL"
     local gguf_in_repo="${LLAMA_CACHED_GGUF_PATH:-model.gguf}"
 
+    ls /runpod-volume | head -n 50
+    ls /runpod-volume/huggingface-cache | head -n 50
     ls $cache_dir | head -n 50
 
     local cache_name
