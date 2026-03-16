@@ -24,8 +24,11 @@ find_cached_path() {
     ls $cache_dir | head -n 50
 
     local cache_name
-    cache_name=$(echo "${model}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
+    cache_name=$(echo "${model}" | sed 's|/|--|g' | tr '[:upper:]' '[:lower:]')
+    echo "cache name: $cache_name"
+
     local snapshots_dir="${cache_dir}/models--${cache_name}/snapshots"
+    ls $snapshots_dir | head -n 50
 
     if [ -d "${snapshots_dir}" ]; then
         local snapshot
