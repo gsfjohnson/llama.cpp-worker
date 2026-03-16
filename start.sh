@@ -10,7 +10,7 @@ env | grep '^LLAMA_' | sort || true
 echo "================================================"
 
 # - Starts llama-server with cached model file, if found.
-# - health_proxy.py, for serverless health /ping.
+# - proxy.js, for serverless health /ping.
 
 CACHED_LLAMA_ARGS=""
 
@@ -56,8 +56,8 @@ else
 fi
 
 if [ ! -z "$LLAMA_SERVER_ONLY_HEALTH" ]; then
-    echo "******** Exec: python3 -u /health_proxy.py"
-    exec python -u /app/health_proxy.py
+    echo "******** Exec: node /app/proxy.js"
+    exec node /app/proxy.js
 fi
 
 # trap exit signals and call the cleanup function
@@ -76,7 +76,7 @@ touch llama.server.log
 # --- Start the health-check proxy in the background ---
 export HEALTH_PORT="${HEALTH_PORT:-3000}"
 echo "******** Starting health-check proxy on port ${HEALTH_PORT}..."
-python -u /app/health_proxy.py &
+node /app/proxy.js &
 HEALTH_PID=$!
 
 # We need to pass these arguments to llama-server verbatim.
