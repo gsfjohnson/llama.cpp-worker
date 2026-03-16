@@ -86,8 +86,7 @@ python3 -u /health_proxy.py &
 HEALTH_PID=$!
 
 # We need to pass these arguments to llama-server verbatim.
-cd /app
 echo "******** Running /app/llama-server $CACHED_LLAMA_ARGS $LLAMA_SERVER_CMD_ARGS"
-exec ./llama-server $CACHED_LLAMA_ARGS $LLAMA_SERVER_CMD_ARGS 2>&1 | tee llama.server.log &
+exec /app/llama-server $CACHED_LLAMA_ARGS $LLAMA_SERVER_CMD_ARGS 2>&1 | tee llama.server.log &
 # LLAMA_SERVER_PID=$! # store the process ID (PID) of the background command
 

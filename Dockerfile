@@ -4,10 +4,10 @@ FROM ghcr.io/ggml-org/llama.cpp:server-cuda
 ENV PYTHONUNBUFFERED=1
 
 # Set up the working directory
-WORKDIR /
+WORKDIR /app
 
 # Startup Script
-COPY --chmod=755 requirements.txt health_proxy.py start.sh /
+COPY --chmod=755 requirements.txt health_proxy.py start.sh /app
 
 RUN apt-get update --yes --quiet \
     && DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet --no-install-recommends \
@@ -19,9 +19,9 @@ RUN apt-get update --yes --quiet \
        python3.11-gdbm python3.11-tk bash curl \
     && ln -s /usr/bin/python3.11 /usr/bin/python \
     && curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11 \
-    && pip install -r /requirements.txt \
+    && pip install -r /app/requirements.txt \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the entrypoint
-ENTRYPOINT ["/bin/sh", "-c", "/start.sh"]
+ENTRYPOINT ["/bin/sh", "-c", "/app/start.sh"]
