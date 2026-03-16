@@ -13,8 +13,12 @@
         "gpuCount": 1,
         "env": [
             {
+                "key": "LLAMA_CACHED_MODEL",
+                "value": "unsloth/gemma-3-270m-it-GGUF:IQ2_XXS"
+            },
+            {
                 "key": "LLAMA_SERVER_CMD_ARGS",
-                "value": "-hf unsloth/gemma-3-270m-it-GGUF:IQ2_XXS --ctx-size 512 -ngl 999"
+                "value": "--ctx-size 512 -ngl 999"
             }
         ],
         "allowedCudaVersions": [
