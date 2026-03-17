@@ -8,6 +8,8 @@ echo "  RunPod llama.cpp Worker (type: load balancer)"
 echo "================================================"
 env | grep '^LLAMA_' | sort || true
 echo "================================================"
+echo "nodejs $(node -v)"
+echo "================================================"
 
 # - Starts llama-server with cached model file, if found.
 # - proxy.js, for serverless health /ping.
@@ -34,9 +36,10 @@ find_cached_path() {
         local snapshot
         snapshot=$(ls "${snapshots_dir}" | head -n 1)
         if [ -n "${snapshot}" ]; then
-            echo "--- ls $snapshots_dir/$snapshot | head -n 50 ---"
-            ls $snapshots_dir/$snapshot | head -n 50
+            echo "--- ls -aFl $snapshots_dir/$snapshot | head -n 50 ---"
+            ls -aFl $snapshots_dir/$snapshot | head -n 50
             CACHED_LLAMA_ARGS="-m ${snapshots_dir}/${snapshot}/${gguf_in_repo}"
+            echo "================================================"
             return
         fi
     fi

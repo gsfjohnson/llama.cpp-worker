@@ -9,7 +9,7 @@
  * All other requests are forwarded to llama-server unmodified.
  */
 
-const http = require("node:http");
+const http = require('http');
 
 const LLAMA_SERVER_HOST = process.env.LLAMA_SERVER_HOST || "127.0.0.1";
 const LLAMA_SERVER_PORT = process.env.LLAMA_ARG_PORT || "8080";
@@ -107,9 +107,24 @@ function handleProxy(clientReq, clientRes) {
 
 const server = http.createServer((req, res) => {
   const start = Date.now();
+  let bytesIn = 0;
+  req.on("data", (chunk) => { bytesIn += chunk.length; });
+
+  const origWrite = res.write.bind(res);
+  const origEnd = res.end.bind(res);
+  let bytesOut = 0;
+  res.write = (chunk, ...args) => {
+    if (chunk) bytesOut += typeof chunk === "string" ? Buffer.byteLength(chunk) : chunk.length;
+    return origWrite(chunk, ...args);
+  };
+  res.end = (chunk, ...args) => {
+    if (chunk) bytesOut += typeof chunk === "string" ? Buffer.byteLength(chunk) : chunk.length;
+    return origEnd(chunk, ...args);
+  };
+
   res.on("finish", () => {
     const ms = Date.now() - start;
-    console.log(`${req.method} ${req.url} ${res.statusCode} ${ms}ms`);
+    console.log(`${req.method} ${req.url} ${res.statusCode} ${ms}ms in=${bytesIn} out=${bytesOut}`);
   });
 
   if (req.method === "GET" && req.url === "/ping") {
