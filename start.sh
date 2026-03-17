@@ -6,7 +6,7 @@ set -e -o pipefail
 echo "================================================"
 echo "  RunPod llama.cpp Worker (type: load balancer)"
 echo "================================================"
-env | grep '^LLAMA_' | sort || true
+env | grep '^LLAMA_|^RUNPOD_|^RP_' | sort || true
 echo "================================================"
 echo "nodejs $(node -v)"
 echo "================================================"
