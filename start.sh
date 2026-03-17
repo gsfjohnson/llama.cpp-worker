@@ -10,6 +10,9 @@ env | grep '^LLAMA_' | sort || true
 echo "================================================"
 echo "nodejs $(node -v)"
 echo "================================================"
+echo "--- ls -aFl /runpod-volume | head -n 50 ---"
+ls -aFl /runpod-volume | head -n 50
+echo "================================================"
 
 # - Starts llama-server with cached model file, if found.
 # - proxy.js, for serverless health /ping.
@@ -21,7 +24,6 @@ find_cached_path() {
     local model="$LLAMA_CACHED_MODEL"
     local gguf_in_repo="${LLAMA_CACHED_GGUF_PATH:-model.gguf}"
 
-    #ls /runpod-volume | head -n 50
     #ls /runpod-volume/huggingface-cache | head -n 50
     ls $cache_dir | head -n 50
 
