@@ -10,8 +10,8 @@ env | grep -E '^LLAMA_|^RUNPOD_|^RP_' | sort || echo "No matching environment va
 echo "================================================"
 echo "nodejs $(node -v)"
 echo "================================================"
-echo "--- ls -aFl /runpod-volume | head -n 50 ---"
-ls -aFl /runpod-volume | head -n 50
+echo "--- find /runpod-volume -printf '%s %p' | head -n 50 ---"
+find /runpod-volume -printf '%s %p\n' | head -n 50
 echo "================================================"
 
 # - Starts llama-server with cached model file, if found.
