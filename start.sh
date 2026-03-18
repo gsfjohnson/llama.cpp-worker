@@ -10,8 +10,8 @@ env | grep -E '^LLAMA_|^RUNPOD_|^RP_' | sort || echo "No matching environment va
 echo "================================================"
 echo "nodejs $(node -v)"
 echo "================================================"
-echo "--- find /runpod-volume -printf '%s %p' | head -n 50 ---"
-find /runpod-volume -printf '%s %p\n' | head -n 50
+echo "--- find /runpod-volume -type f -printf '%p %s' | head -n 50 ---"
+find /runpod-volume -type f -printf '%p %s\n' | head -n 50
 echo "================================================"
 
 # - Starts llama-server with cached model file, if found.
@@ -19,37 +19,32 @@ echo "================================================"
 
 LLAMA_ARGS=""
 
-# If LLAMA_ARG_HF_REPO is set, attempt to resolve a cached GGUF from the HF cache
-if [ -n "$LLAMA_ARG_HF_REPO" ]; then
-    HF_CACHE_DIR="/runpod-volume/huggingface-cache/hub"
-    if [ -d "$HF_CACHE_DIR" ]; then
-        echo "******** LLAMA_ARG_HF_REPO is set to: $LLAMA_ARG_HF_REPO"
-        echo "******** Searching HF cache at $HF_CACHE_DIR for cached model..."
+# If LLAMA_ARG_HF_REPO is set and LLAMA_ARG_HF_FILE is not, search the cache for a matching model
+HF_CACHE_DIR="/runpod-volume/huggingface-cache/hub"
+if [ -d "$HF_CACHE_DIR" ] && [ -n "$LLAMA_ARG_HF_REPO" ] && [ -z "$LLAMA_ARG_HF_FILE" ]; then
+    # If repo contains ":", split into repo and quant (e.g. "org/repo:Q4_K_M")
+    hf_repo="$LLAMA_ARG_HF_REPO"
+    if [[ "$hf_repo" == *":"* ]]; then
+        quant="${LLAMA_ARG_HF_REPO##*:}"
+        hf_repo="${LLAMA_ARG_HF_REPO%%:*}"
+        echo "******** Repo: $hf_repo"
+        echo "******** Quant: $quant"
+    else
+        echo "******** Repo: $hf_repo"
+        quant=""
+    fi
 
-        # Convert repo name to HF cache directory format (org/repo -> models--org--repo)
-        cache_name=$(echo "$LLAMA_ARG_HF_REPO" | sed 's|/|--|g')
-        snapshots_dir="${HF_CACHE_DIR}/models--${cache_name}/snapshots"
+    echo "******** Searching cache $HF_CACHE_DIR ..."
 
-        if [ -d "$snapshots_dir" ]; then
-            snapshot=$(ls "$snapshots_dir" | head -n 1)
-            if [ -n "$snapshot" ]; then
-                snapshot_path="${snapshots_dir}/${snapshot}"
-                echo "--- ls -aFl $snapshot_path | head -n 50 ---"
-                ls -aFl "$snapshot_path" | head -n 50
+    # Convert repo name to HF cache directory format (org/repo -> models--org--repo)
+    cache_name=$(echo "$LLAMA_ARG_HF_REPO" | sed 's|/|--|g')
+    model_dir="${HF_CACHE_DIR}/models--${cache_name}"
 
-                # Look for the exact file specified by LLAMA_ARG_HF_FILE
-                if [ -n "$LLAMA_ARG_HF_FILE" ] && [ -f "${snapshot_path}/${LLAMA_ARG_HF_FILE}" ]; then
-                    export LLAMA_ARG_HF_FILE="${snapshot_path}/${LLAMA_ARG_HF_FILE}"
-                    echo "******** Found cached model file: $LLAMA_ARG_HF_FILE"
-                else
-                    echo "******** No cached file matching LLAMA_ARG_HF_FILE='${LLAMA_ARG_HF_FILE}' in $snapshot_path"
-                fi
-            else
-                echo "******** No snapshots found in $snapshots_dir"
-            fi
-        else
-            echo "******** Cache directory not found: $snapshots_dir"
-        fi
+    [ -n "$quant" ] && cached_file=$(find "$model_dir" -maxdepth 1 -type f -iname "*${quant}.gguf" | head -n 1)
+    [ -n "$cached_file" ] && cached_file=$(find "$snapshot_path" -maxdepth 1 -type f | head -n 1)
+    if [ -n "$cached_file" ]; then
+        export LLAMA_ARG_HF_FILE="$cached_file"
+        echo "******** Found: $LLAMA_ARG_HF_FILE"
     fi
 fi
 

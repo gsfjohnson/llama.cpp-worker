@@ -24,15 +24,15 @@ In production, runpod model cache system is more flexible.  Workers start more s
 
 ## Configuration
 
-Configure `proxy.js` via environment variables:
+`proxy.js`
 
-| Variable | Description |
+| Env Variable | Description |
 |---|---|
 | `HEALTH_PORT` | Port that will respond to http get /ping. (default: `3000`) |
 
-Also configure `llama-server` via environment variables:
+`llama-server`
 
-| Variable | Description |
+| Env Variable | Description |
 |---|---|
 | `LLAMA_ARG_HF_REPO` | Hugging Face repository to download the model from (e.g., `unsloth/Qwen3.5-27B-GGUF:UD-Q4_K_XL`) |
 | `LLAMA_ARG_N_GPU_LAYERS` | Number of model layers to offload to the GPU (`-1` for all layers) |
@@ -42,6 +42,8 @@ Also configure `llama-server` via environment variables:
 | `LLAMA_ARG_PORT` | Port for the server to listen on (default: `8080`) |
 | `LLAMA_API_KEY` | API key required for client authentication to the server |
 | `LLAMA_CACHE` | Directory path for storing downloaded and cached model files |
+
+More: [README.md](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md)
 
 ## License
 
