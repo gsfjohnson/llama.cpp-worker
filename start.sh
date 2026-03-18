@@ -17,52 +17,40 @@ echo "================================================"
 # - Starts llama-server with cached model file, if found.
 # - proxy.js, for serverless health /ping.
 
-CACHED_LLAMA_ARGS=""
+LLAMA_ARGS=""
 
-find_cached_path() {
-    local cache_dir="/runpod-volume/huggingface-cache/hub"
-    local model="$LLAMA_CACHED_MODEL"
-    local gguf_in_repo="${LLAMA_CACHED_GGUF_PATH:-model.gguf}"
+# If LLAMA_ARG_HF_REPO is set, attempt to resolve a cached GGUF from the HF cache
+if [ -n "$LLAMA_ARG_HF_REPO" ]; then
+    HF_CACHE_DIR="/runpod-volume/huggingface-cache/hub"
+    if [ -d "$HF_CACHE_DIR" ]; then
+        echo "******** LLAMA_ARG_HF_REPO is set to: $LLAMA_ARG_HF_REPO"
+        echo "******** Searching HF cache at $HF_CACHE_DIR for cached model..."
 
-    #ls /runpod-volume/huggingface-cache | head -n 50
-    ls $cache_dir | head -n 50
+        # Convert repo name to HF cache directory format (org/repo -> models--org--repo)
+        cache_name=$(echo "$LLAMA_ARG_HF_REPO" | sed 's|/|--|g')
+        snapshots_dir="${HF_CACHE_DIR}/models--${cache_name}/snapshots"
 
-    local cache_name
-    cache_name=$(echo "${model}" | sed 's|/|--|g' | tr '[:upper:]' '[:lower:]')
-    #echo "cache name: $cache_name"
+        if [ -d "$snapshots_dir" ]; then
+            snapshot=$(ls "$snapshots_dir" | head -n 1)
+            if [ -n "$snapshot" ]; then
+                snapshot_path="${snapshots_dir}/${snapshot}"
+                echo "--- ls -aFl $snapshot_path | head -n 50 ---"
+                ls -aFl "$snapshot_path" | head -n 50
 
-    local snapshots_dir="${cache_dir}/models--${cache_name}/snapshots"
-    ls $snapshots_dir | head -n 50
-
-    if [ -d "${snapshots_dir}" ]; then
-        local snapshot
-        snapshot=$(ls "${snapshots_dir}" | head -n 1)
-        if [ -n "${snapshot}" ]; then
-            echo "--- ls -aFl $snapshots_dir/$snapshot | head -n 50 ---"
-            ls -aFl $snapshots_dir/$snapshot | head -n 50
-            CACHED_LLAMA_ARGS="-m ${snapshots_dir}/${snapshot}/${gguf_in_repo}"
-            echo "================================================"
-            return
+                # Look for the exact file specified by LLAMA_ARG_HF_FILE
+                if [ -n "$LLAMA_ARG_HF_FILE" ] && [ -f "${snapshot_path}/${LLAMA_ARG_HF_FILE}" ]; then
+                    export LLAMA_ARG_HF_FILE="${snapshot_path}/${LLAMA_ARG_HF_FILE}"
+                    echo "******** Found cached model file: $LLAMA_ARG_HF_FILE"
+                else
+                    echo "******** No cached file matching LLAMA_ARG_HF_FILE='${LLAMA_ARG_HF_FILE}' in $snapshot_path"
+                fi
+            else
+                echo "******** No snapshots found in $snapshots_dir"
+            fi
+        else
+            echo "******** Cache directory not found: $snapshots_dir"
         fi
     fi
-
-    echo "******** Warning: Could not find cached model path for ${model}"
-    CACHED_LLAMA_ARGS=""
-}
-
-# check if $LLAMA_CACHED_MODEL is set and not empty
-if [ -n "$LLAMA_CACHED_MODEL" ]; then
-    echo "******** Caching is enabled. Finding cached model path..."
-    find_cached_path
-
-    echo "******** Using cached model with arguments: $CACHED_LLAMA_ARGS"
-else
-    echo "******** WARNING: Caching is disabled. Please visit the inference-worker README and docs to learn more."
-fi
-
-if [ ! -z "$LLAMA_SERVER_ONLY_HEALTH" ]; then
-    echo "******** Exec: node /app/proxy.js"
-    exec node /app/proxy.js
 fi
 
 # trap exit signals and call the cleanup function
@@ -86,12 +74,6 @@ HEALTH_PID=$!
 
 # We need to pass these arguments to llama-server verbatim.
 cd /app
-echo "******** /app/llama-server $CACHED_LLAMA_ARGS"
-if [ "$LLAMA_EXEC" != "0" ]; then
-  echo "******** exec"
-  exec /app/llama-server $CACHED_LLAMA_ARGS 2>&1 | tee llama.server.log
-else
-  echo "******** not exec"
-  /app/llama-server $CACHED_LLAMA_ARGS 2>&1 | tee llama.server.log
-fi
+echo "******** exec /app/llama-server $LLAMA_ARGS"
+exec /app/llama-server $LLAMA_ARGS 2>&1 | tee llama.server.log
 # LLAMA_SERVER_PID=$! # store the process ID (PID) of the background command
