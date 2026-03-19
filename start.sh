@@ -10,8 +10,8 @@ env | grep -E '^LLAMA_|^RUNPOD_|^RP_' | sort || echo "No matching environment va
 echo "================================================"
 echo "nodejs $(node -v)"
 echo "================================================"
-echo "--- find /runpod-volume -type f -printf '%p %s' | head -n 50 ---"
-find /runpod-volume -type f -printf '%p %s\n' | head -n 50
+echo "--- find /runpod-volume -type f -iname '*.gguf' -printf '%p %s' | head -n 50 ---"
+find /runpod-volume -type f -iname '*.gguf' -printf '%p %s\n' | head -n 50
 echo "================================================"
 
 # - Starts llama-server with cached model file, if found.
@@ -34,14 +34,17 @@ if [ -d "$HF_CACHE_DIR" ] && [ -n "$LLAMA_ARG_HF_REPO" ] && [ -z "$LLAMA_ARG_HF_
         quant=""
     fi
 
-    echo "******** Searching cache $HF_CACHE_DIR ..."
-
     # Convert repo name to HF cache directory format (org/repo -> models--org--repo)
     cache_name=$(echo "$hf_repo" | tr '[:upper:]' '[:lower:]' | sed 's|/|--|g')
     snapshot_dir="${HF_CACHE_DIR}/models--${cache_name}/snapshots"
 
-    [ -n "$quant" ] && cached_file=$(find "$snapshot_dir" -type f -iname "*${quant}.gguf" | head -n 1)
-    [ -n "$cached_file" ] && cached_file=$(find "$snapshot_dir" -type f -iname "*.gguf" | head -n 1)
+    echo "******** Searching $snapshot_dir ..."
+
+    if [ -n "$quant" ]; then
+        cached_file=$(find "$snapshot_dir" -type f -iname "*${quant}.gguf" | head -n 1)
+    else
+        cached_file=$(find "$snapshot_dir" -type f -iname "*.gguf" | grep -v mmproj | head -n 1)
+    fi
     if [ -n "$cached_file" ]; then
         export LLAMA_ARGS="-m $cached_file"
         unset LLAMA_ARG_HF_REPO
