@@ -4,7 +4,7 @@
 set -e -o pipefail
 
 echo "================================================"
-echo "  RunPod llama.cpp Worker (type: load balancer)"
+echo "  RunPod llama.cpp Worker (mode: ${SERVERLESS_MODE:-auto})"
 echo "================================================"
 env | grep -E '^LLAMA_|^RUNPOD_|^RP_' | sort || echo "No matching environment variables found."
 echo "================================================"

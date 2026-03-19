@@ -2,9 +2,9 @@
     <img src="https://raw.githubusercontent.com/ggml-org/llama.cpp/master/media/llama1-icon-transparent.png" alt="llama.cpp logo" width="128">
 </p>
 
-# RunPod llama.cpp inference load-balancer worker
+# RunPod llama.cpp inference worker
 
-This repository contains a serverless inference worker (load balancer only, it does not work for queued).  It uses llama.cpp to serve inference. It uses the `ghcr.io/ggml-org/llama.cpp:server-cuda` image as a base, with a `start.sh` bash script and `proxy.js` to respond to `/ping` requests, ensuring the serverless machinery knows when llama-server is healthy.
+This repository contains a serverless inference worker for RunPod.  Supports both load balancer and queue modes.  It uses llama.cpp `llama-server`, via the docker image `ghcr.io/ggml-org/llama.cpp:server-cuda`.   This repo builds in a `start.sh` bash script and `proxy.js` to handle `/ping` health checks and queue job processing.
 
 This project is based on [Jacob-ML/inference-worker](https://github.com/Jacob-ML/inference-worker/), which was a fork of [SvenBrnn's `runpod-worker-ollama`](https://github.com/SvenBrnn/runpod-worker-ollama).
 
@@ -18,9 +18,9 @@ Cached modules documentation isn't great.  As of March 15th 2026, this is how it
 2. On worker start, it first downloads docker image.
 3. Then it populates `/runpod-volumes/huggingface-cache/hub/model--unsloth--qwen3.5-27b-gguf/xxxxx` where the model name is `unsloth/Qwen3.5-27B-GGUF:UD-Q4_K_XL` and `xxxxx` are all the quants for this model.
 
-During setup/dev phase, it's often faster to use `LLAMA_ARG_HF_REPO` and set the `LLAMA_CACHE` to the network volume path (e.g. `/runpod-volumes`).  Then llama.cpp will download what it needs the first time.  However this configuration can only be used with a single datacenter - because the network storage volume must be in the same datacenter as the serverless workers.
+During setup/dev phase, it's often faster to use `LLAMA_ARG_HF_REPO` and set the `LLAMA_CACHE` to the network volume path (e.g. `/runpod-volume`).  Then llama.cpp will download what it needs the first time.  However this configuration can only be used with a single datacenter - because the network storage volume must be in the same datacenter as the serverless worker.
 
-In production, runpod model cache system is more flexible.  Workers start more slowly, because the model cache takes a while to download (particularly for 20+ GB models) on each worker.  But once all the workers have initialized - they are quick - particularly with flashboot.
+In production, runpod model cache system is more flexible.  Workers start more slowly, because the model cache takes a while to populate (particularly for 20+ GB models), for the worker.  Once the worker has initialized, particularly with flashboot, its very very quick.
 
 ## Configuration
 
@@ -38,6 +38,39 @@ Runpod Serverless
 | `LLAMA_SERVER_HOST` | llama-server http address (default: `127.0.0.1`) |
 | `LLAMA_ARG_PORT` | llama-server http port (default: `8080`) |
 | `PORT_HEALTH` | Port that will respond to http get /ping. (default: `3000`) |
+| `SERVERLESS_MODE` | `queue`, `lb`, or unset for auto-detect. See below. |
+| `QUEUE_TIMEOUT` | Timeout in ms for queue job requests (default: `300000`) |
+
+### Serverless modes
+
+Set `SERVERLESS_MODE` to control how the proxy handles requests:
+
+- **`lb`** — Load balancer mode. All non-`/ping` requests are proxied directly to llama-server. Use this when RunPod sends raw HTTP requests (e.g. OpenAI-compatible calls) to the worker.
+- **`queue`** — Queue mode. All non-`/ping` requests must be RunPod queue job payloads (`{"id": "...", "input": {...}}`). The proxy extracts the `input`, forwards it to llama-server, and wraps the response in `{"output": ...}`. For queue mode, set RunPod's `PORT` to the proxy port (default `3000`).
+- **Unset** — Auto-detect per request. If the POST body contains an `input` object, it is treated as a queue job; otherwise it is proxied directly.
+
+### Queue input format
+
+```json
+{
+  "id": "job-123",
+  "input": {
+    "messages": [{"role": "user", "content": "Hello"}],
+    "max_tokens": 100
+  }
+}
+```
+
+Reserved keys in `input` (extracted before forwarding to llama-server):
+
+| Key | Description |
+|---|---|
+| `endpoint` | llama-server path (default: auto-detected from body content) |
+| `method` | HTTP method (default: `POST`) |
+
+Auto-detection: if `messages` is present → `/v1/chat/completions`; if `prompt` is present → `/v1/completions`; otherwise `/v1/chat/completions`.
+
+Streaming is supported — set `"stream": true` in the input and the SSE stream from llama-server is passed through directly.
 
 `llama-server`
 
