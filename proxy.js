@@ -124,7 +124,7 @@ const server = http.createServer((req, res) => {
 
   res.on("finish", () => {
     const ms = Date.now() - start;
-    console.log(`${req.method} ${req.url} ${res.statusCode} ${ms}ms in=${bytesIn} out=${bytesOut}`);
+    console.log(`${res.statusCode} ${req.method} ${req.url} ${ms}ms in=${bytesIn} out=${bytesOut}`);
   });
 
   if (req.method === "GET" && req.url === "/ping") {

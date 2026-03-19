@@ -24,11 +24,20 @@ In production, runpod model cache system is more flexible.  Workers start more s
 
 ## Configuration
 
+Runpod Serverless
+
+| Env Variable | Description |
+|---|---|
+| `PORT` | Port that will respond to regular http requests (default: `8080`) |
+| `PORT_HEALTH` | Port that will respond to http get /ping. (default: `3000`) |
+
 `proxy.js`
 
 | Env Variable | Description |
 |---|---|
-| `HEALTH_PORT` | Port that will respond to http get /ping. (default: `3000`) |
+| `LLAMA_SERVER_HOST` | llama-server http address (default: `127.0.0.1`) |
+| `LLAMA_ARG_PORT` | llama-server http port (default: `8080`) |
+| `PORT_HEALTH` | Port that will respond to http get /ping. (default: `3000`) |
 
 `llama-server`
 
@@ -41,7 +50,7 @@ In production, runpod model cache system is more flexible.  Workers start more s
 | `LLAMA_ARG_HOST` | Host address for the server to listen on (default: `127.0.0.1`) |
 | `LLAMA_ARG_PORT` | Port for the server to listen on (default: `8080`) |
 | `LLAMA_API_KEY` | API key required for client authentication to the server |
-| `LLAMA_CACHE` | Directory path for storing downloaded and cached model files |
+| `LLAMA_CACHE` | Directory downloaded/cached model files (`/runpod-volume` when using network volumes) |
 
 More: [README.md](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md)
 
