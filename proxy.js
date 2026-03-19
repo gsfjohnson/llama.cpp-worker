@@ -18,7 +18,7 @@ const http = require('http');
 
 const LLAMA_SERVER_HOST = process.env.LLAMA_SERVER_HOST || "127.0.0.1";
 const LLAMA_SERVER_PORT = parseInt(process.env.LLAMA_ARG_PORT || "8080", 10);
-const PORT_HEALTH = parseInt(process.env.PORT_HEALTH || "3000", 10);
+const PORT_HEALTH = parseInt(process.env.PORT_HEALTH || "3098", 10);
 const SERVERLESS_MODE = (process.env.SERVERLESS_MODE || "").toLowerCase();
 const QUEUE_TIMEOUT = parseInt(process.env.QUEUE_TIMEOUT || "300000", 10);
 

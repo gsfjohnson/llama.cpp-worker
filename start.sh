@@ -71,10 +71,8 @@ fi
 touch llama.server.log
 
 # --- Start the health-check proxy in the background ---
-export PORT_HEALTH="${PORT_HEALTH:-3000}"
-echo "******** Starting health-check proxy on port ${PORT_HEALTH}..."
+echo "******** Starting proxy."
 node /app/proxy.js &
-HEALTH_PID=$!
 
 # We need to pass these arguments to llama-server verbatim.
 cd /app

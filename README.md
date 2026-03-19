@@ -31,7 +31,7 @@ Runpod Serverless
 | Env Variable | Description |
 |---|---|
 | `PORT` | Port that will respond to regular http requests (default: `8080`) |
-| `PORT_HEALTH` | Port that will respond to http get /ping. (default: `3000`) |
+| `PORT_HEALTH` | Port that will respond to http get /ping. (default: `3098`) |
 
 `proxy.js`
 
@@ -39,7 +39,7 @@ Runpod Serverless
 |---|---|
 | `LLAMA_SERVER_HOST` | llama-server http address (default: `127.0.0.1`) |
 | `LLAMA_ARG_PORT` | llama-server http port (default: `8080`) |
-| `PORT_HEALTH` | Port that will respond to http get /ping. (default: `3000`) |
+| `PORT_HEALTH` | Port that will respond to http get /ping. (default: `3098`) |
 | `SERVERLESS_MODE` | `queue`, `lb`, or unset for auto-detect. See below. |
 | `QUEUE_TIMEOUT` | Timeout in ms for queue job requests (default: `300000`) |
 
@@ -48,7 +48,7 @@ Runpod Serverless
 Set `SERVERLESS_MODE` to control how the proxy handles requests:
 
 - **`lb`** — Load balancer mode. All non-`/ping` requests are proxied directly to llama-server. Use this when RunPod sends raw HTTP requests (e.g. OpenAI-compatible calls) to the worker.
-- **`queue`** — Queue mode. All non-`/ping` requests must be RunPod queue job payloads (`{"id": "...", "input": {...}}`). The proxy extracts the `input`, forwards it to llama-server, and wraps the response in `{"output": ...}`. For queue mode, set RunPod's `PORT` to the proxy port (default `3000`).
+- **`queue`** — Queue mode. All non-`/ping` requests must be RunPod queue job payloads (`{"id": "...", "input": {...}}`). The proxy extracts the `input`, forwards it to llama-server, and wraps the response in `{"output": ...}`. For queue mode, set RunPod's `PORT` to the proxy port (default `3098`).
 - **Unset** — Auto-detect per request. If the POST body contains an `input` object, it is treated as a queue job; otherwise it is proxied directly.
 
 ### Queue input format
