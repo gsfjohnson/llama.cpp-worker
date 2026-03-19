@@ -4,23 +4,25 @@
 
 # RunPod llama.cpp inference worker
 
-This repository contains a serverless inference worker for RunPod.  Supports both load balancer and queue modes.  It uses llama.cpp `llama-server`, via the docker image `ghcr.io/ggml-org/llama.cpp:server-cuda`.   This repo builds in a `start.sh` bash script and `proxy.js` to handle `/ping` health checks and queue job processing.
+This repository contains a serverless inference worker for RunPod - supporting both load balancer and queue mode.
 
-This project is based on [Jacob-ML/inference-worker](https://github.com/Jacob-ML/inference-worker/), which was a fork of [SvenBrnn's `runpod-worker-ollama`](https://github.com/SvenBrnn/runpod-worker-ollama).
+It uses llama.cpp `llama-server`, via the docker image `ghcr.io/ggml-org/llama.cpp:server-cuda`.  It adds a `start.sh` bash script and `proxy.js` to handle `/ping` health checks and queue job processing.
+
+This project heavily influenced by [Jacob-ML/inference-worker](https://github.com/Jacob-ML/inference-worker/), which was a fork of [SvenBrnn's `runpod-worker-ollama`](https://github.com/SvenBrnn/runpod-worker-ollama).
 
 ## Setup
 
 To get the best performance out of this worker, it is recommended to use cached models. Please see the [cached models documentation](./docs/cached.md) for more information, this is **highly recommended and will save many resources**.
 
-Cached modules documentation isn't great.  As of March 15th 2026, this is how it works:
+As of March 15th 2026, RunPod model caching process:
 
-1. Specify model in the serverless dialogue.
-2. On worker start, it first downloads docker image.
-3. Then it populates `/runpod-volumes/huggingface-cache/hub/model--unsloth--qwen3.5-27b-gguf/xxxxx` where the model name is `unsloth/Qwen3.5-27B-GGUF:UD-Q4_K_XL` and `xxxxx` are all the quants for this model.
+1. Specify model in the serverless setup dialogue, e.g. `unsloth/Qwen3.5-27B-GGUF`.
+2. Docker image is downloaded to the worker during init.
+3. After downloading docker image, init then populates `/runpod-volumes/huggingface-cache/hub/model--unsloth--qwen3.5-27b-gguf/snapshots/xxxxxxxxxxxxx` directory with all the gguf quants.
 
-During setup/dev phase, it's often faster to use `LLAMA_ARG_HF_REPO` and set the `LLAMA_CACHE` to the network volume path (e.g. `/runpod-volume`).  Then llama.cpp will download what it needs the first time.  However this configuration can only be used with a single datacenter - because the network storage volume must be in the same datacenter as the serverless worker.
+During the testing/dev phase, it's often faster to use a network volume.  However this configuration can only be used with a single datacenter - because the network storage volume must be in the same datacenter as the serverless worker.  Set `LLAMA_ARG_HF_REPO` (e.g. `unsloth/Qwen3.5-27B-GGUF:UD-Q4_K_XL`) and set the `LLAMA_CACHE` to the network volume path (e.g. `/runpod-volume`).  The correct model files will downloaded to the network volume during the first run.  A cpu pod can also be used for this, to reduce cost.
 
-In production, runpod model cache system is more flexible.  Workers start more slowly, because the model cache takes a while to populate (particularly for 20+ GB models), for the worker.  Once the worker has initialized, particularly with flashboot, its very very quick.
+In production the runpod model cache system is more flexible.  Workers start more slowly, because the model cache takes a while to populate during worker init (particularly for 20+ GB models).  But once initialized, particularly after their first run with flashboot, workers are able to start quickly.
 
 ## Configuration
 
