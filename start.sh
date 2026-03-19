@@ -37,11 +37,11 @@ if [ -d "$HF_CACHE_DIR" ] && [ -n "$LLAMA_ARG_HF_REPO" ] && [ -z "$LLAMA_ARG_HF_
     echo "******** Searching cache $HF_CACHE_DIR ..."
 
     # Convert repo name to HF cache directory format (org/repo -> models--org--repo)
-    cache_name=$(echo "$LLAMA_ARG_HF_REPO" | sed 's|/|--|g')
-    model_dir="${HF_CACHE_DIR}/models--${cache_name}"
+    cache_name=$(echo "$hf_repo" | tr '[:upper:]' '[:lower:]' | sed 's|/|--|g')
+    snapshot_dir="${HF_CACHE_DIR}/models--${cache_name}/snapshots"
 
-    [ -n "$quant" ] && cached_file=$(find "$model_dir" -maxdepth 1 -type f -iname "*${quant}.gguf" | head -n 1)
-    [ -n "$cached_file" ] && cached_file=$(find "$snapshot_path" -maxdepth 1 -type f | head -n 1)
+    [ -n "$quant" ] && cached_file=$(find "$snapshot_dir" -type f -iname "*${quant}.gguf" | head -n 1)
+    [ -n "$cached_file" ] && cached_file=$(find "$snapshot_dir" -type f | head -n 1)
     if [ -n "$cached_file" ]; then
         export LLAMA_ARG_HF_FILE="$cached_file"
         echo "******** Found: $LLAMA_ARG_HF_FILE"
