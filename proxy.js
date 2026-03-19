@@ -17,8 +17,8 @@
 const http = require('http');
 
 const LLAMA_SERVER_HOST = process.env.LLAMA_SERVER_HOST || "127.0.0.1";
-const LLAMA_SERVER_PORT = process.env.LLAMA_ARG_PORT || "8080";
-const HEALTH_PORT = parseInt(process.env.PORT_HEALTH || "3000", 10);
+const LLAMA_SERVER_PORT = parseInt(process.env.LLAMA_ARG_PORT || "8080", 10);
+const PORT_HEALTH = parseInt(process.env.PORT_HEALTH || "3000", 10);
 const SERVERLESS_MODE = (process.env.SERVERLESS_MODE || "").toLowerCase();
 const QUEUE_TIMEOUT = parseInt(process.env.QUEUE_TIMEOUT || "300000", 10);
 
@@ -297,7 +297,7 @@ const server = http.createServer((req, res) => {
   });
 });
 
-server.listen(HEALTH_PORT, "0.0.0.0", () => {
+server.listen(PORT_HEALTH, "0.0.0.0", () => {
   const mode = SERVERLESS_MODE || "auto";
-  console.log(`[proxy] Starting on port ${HEALTH_PORT} (mode: ${mode})`);
+  console.log(`[proxy] Starting on port ${PORT_HEALTH} (mode: ${mode})`);
 });

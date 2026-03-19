@@ -20,7 +20,7 @@ As of March 15th 2026, RunPod model caching process:
 2. Docker image is downloaded to the worker during init.
 3. After downloading docker image, init then populates `/runpod-volumes/huggingface-cache/hub/model--unsloth--qwen3.5-27b-gguf/snapshots/xxxxxxxxxxxxx` directory with all the gguf quants.
 
-During the testing/dev phase, it's often faster to use a network volume.  However this configuration can only be used with a single datacenter - because the network storage volume must be in the same datacenter as the serverless worker.  Set `LLAMA_ARG_HF_REPO` (e.g. `unsloth/Qwen3.5-27B-GGUF:UD-Q4_K_XL`) and set the `LLAMA_CACHE` to the network volume path (e.g. `/runpod-volume`).  The correct model files will downloaded to the network volume during the first run.  A cpu pod can also be used for this, to reduce cost.
+During the testing/dev phase, it's often faster to use a network volume.  However this configuration can only be used with a single datacenter - because the network storage volume must be in the same datacenter as the serverless worker.  Set `LLAMA_ARG_HF_REPO` (e.g. `unsloth/Qwen3.5-27B-GGUF:UD-Q4_K_XL`) and `LLAMA_CACHE` to the network volume path (e.g. `/runpod-volume`).  Model files will be downloaded to the cache path during `llama-server` first run.  A cpu pod can also be used to populate the cache, to reduce cost.
 
 In production the runpod model cache system is more flexible.  Workers start more slowly, because the model cache takes a while to populate during worker init (particularly for 20+ GB models).  But once initialized, particularly after their first run with flashboot, workers are able to start quickly.
 

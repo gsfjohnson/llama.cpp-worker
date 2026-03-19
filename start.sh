@@ -6,7 +6,7 @@ set -e -o pipefail
 echo "================================================"
 echo "  RunPod llama.cpp Worker (mode: ${SERVERLESS_MODE:-auto})"
 echo "================================================"
-env | grep -E '^LLAMA_|^RUNPOD_|^RP_' | sort || echo "No matching environment variables found."
+env | grep -E '^LLAMA_|^RUNPOD_|^RP_|PORT' | sort || echo "No matching environment variables found."
 echo "================================================"
 echo "nodejs $(node -v)"
 echo "================================================"
@@ -64,11 +64,15 @@ echo "******** Stopping existing llama-server instances (if any)..."
     echo "******** No llama-server running"
 }
 
+if [ -n "$LLAMA_LOG_DISABLE" ]; then
+    LLAMA_ARGS="$LLAMA_ARGS --log-disable"
+fi
+
 touch llama.server.log
 
 # --- Start the health-check proxy in the background ---
-export HEALTH_PORT="${HEALTH_PORT:-3000}"
-echo "******** Starting health-check proxy on port ${HEALTH_PORT}..."
+export PORT_HEALTH="${PORT_HEALTH:-3000}"
+echo "******** Starting health-check proxy on port ${PORT_HEALTH}..."
 node /app/proxy.js &
 HEALTH_PID=$!
 
