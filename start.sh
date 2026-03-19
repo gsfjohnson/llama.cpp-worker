@@ -41,10 +41,12 @@ if [ -d "$HF_CACHE_DIR" ] && [ -n "$LLAMA_ARG_HF_REPO" ] && [ -z "$LLAMA_ARG_HF_
     snapshot_dir="${HF_CACHE_DIR}/models--${cache_name}/snapshots"
 
     [ -n "$quant" ] && cached_file=$(find "$snapshot_dir" -type f -iname "*${quant}.gguf" | head -n 1)
-    [ -n "$cached_file" ] && cached_file=$(find "$snapshot_dir" -type f | head -n 1)
+    [ -n "$cached_file" ] && cached_file=$(find "$snapshot_dir" -type f -iname "*.gguf" | head -n 1)
     if [ -n "$cached_file" ]; then
-        export LLAMA_ARG_HF_FILE="$cached_file"
-        echo "******** Found: $LLAMA_ARG_HF_FILE"
+        export LLAMA_ARGS="-m $cached_file"
+        unset LLAMA_ARG_HF_REPO
+        echo "******** unset LLAMA_ARG_HF_REPO"
+        echo "******** LLAMA_ARGS: $LLAMA_ARGS"
     fi
 fi
 
